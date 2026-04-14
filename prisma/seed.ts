@@ -6,15 +6,63 @@ interface PokeAPIType {
 	}
 }
 
+const generationsData = [
+	{ id: 1, name: 'Kanto', startId: 1, endId: 151 },
+	{ id: 2, name: 'Johto', startId: 152, endId: 251 },
+	{ id: 3, name: 'Hoenn', startId: 252, endId: 386 },
+	{ id: 4, name: 'Sinnoh', startId: 387, endId: 493 },
+	{ id: 5, name: 'Unova', startId: 494, endId: 649 },
+	{ id: 6, name: 'Kalos', startId: 650, endId: 721 },
+	{ id: 7, name: 'Alola', startId: 722, endId: 809 },
+	{ id: 8, name: 'Galar', startId: 810, endId: 905 },
+	{ id: 9, name: 'Paldea', startId: 906, endId: 1025 },
+]
+
+const typesData = [
+	{ id: 'normal', name: 'Normal' },
+	{ id: 'fighting', name: 'Lutador' },
+	{ id: 'flying', name: 'Voador' },
+	{ id: 'poison', name: 'Venenoso' },
+	{ id: 'ground', name: 'Terra' },
+	{ id: 'rock', name: 'Pedra' },
+	{ id: 'bug', name: 'Inseto' },
+	{ id: 'ghost', name: 'Fantasma' },
+	{ id: 'steel', name: 'Aço' },
+	{ id: 'fire', name: 'Fogo' },
+	{ id: 'water', name: 'Água' },
+	{ id: 'grass', name: 'Planta' },
+	{ id: 'electric', name: 'Elétrico' },
+	{ id: 'psychic', name: 'Psíquico' },
+	{ id: 'ice', name: 'Gelo' },
+	{ id: 'dragon', name: 'Dragão' },
+	{ id: 'dark', name: 'Sombrio' },
+	{ id: 'fairy', name: 'Fada' },
+]
+
 async function main() {
 	console.log('🚀 Iniciando a magia da PokéAPI...')
 
-	const generations = await prisma.generation.findMany()
-
-	if (generations.length === 0) {
-		console.log('❌ Ops! Nenhuma geração encontrada no banco de dados.')
-		return
+	console.log('📦 Populando as gerações no banco de dados...')
+	for (const gen of generationsData) {
+		await prisma.generation.upsert({
+			where: {
+				id: gen.id,
+			},
+			update: gen,
+			create: gen,
+		})
 	}
+
+	console.log('⏳ Semeando os Tipos...')
+	for (const type of typesData) {
+		await prisma.type.upsert({
+			where: { id: type.id },
+			update: type,
+			create: type,
+		})
+	}
+
+	const generations = await prisma.generation.findMany()
 
 	const maxLimit = 1025
 	const res = await fetch(`https://pokeapi.co/api/v2/pokemon?limit=${maxLimit}`)
@@ -65,7 +113,12 @@ async function main() {
 	console.log('🎉 Pokédex populada com SUCESSO! A coleção já pode começar.')
 }
 
-main().catch((e) => {
-	console.error(e)
-	process.exit(1)
-})
+main()
+	.catch((e) => {
+		console.error(e)
+		process.exit(1)
+	})
+	.finally(async () => {
+		// Desconecta graciosamente do banco após terminar
+		await prisma.$disconnect()
+	})
