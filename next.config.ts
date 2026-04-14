@@ -1,8 +1,14 @@
-import type { NextConfig } from "next";
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+	reactCompiler: true,
+	images: {
+		remotePatterns: [
+			{
+				protocol: 'https',
+				hostname: 'raw.githubusercontent.com',
+			},
+		],
+	},
+}
 
-const nextConfig: NextConfig = {
-  /* config options here */
-  reactCompiler: true,
-};
-
-export default nextConfig;
+export default nextConfig
